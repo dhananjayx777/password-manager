@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Password Strength Checker</title>
+<style>
+  :root {
+    --bg1: #1e2749;
+    --bg2: #3b2f63;
+    --bg3: #5b2a6f;
+    --card-bg: rgba(255,255,255,0.97);
+    --text-main: #1e2749;
+    --text-sub: #777;
+    --border: #e0e0e0;
+    --track: #eee;
+    --checklist-off: #aaa;
+    --divider: #f0f0f0;
+    --footer: #bbb;
+    --tip-bg: #fff8e1;
+    --tip-border: #f7b731;
+    --tip-text: #8a6d00;
+  }
+
+  [data-theme="dark"] {
+    --bg1: #05070f;
+    --bg2: #0f1330;
+    --bg3: #1c1440;
+    --card-bg: rgba(24, 26, 46, 0.97);
+    --text-main: #f1f1f6;
+    --text-sub: #9a9ab0;
+    --border: #34364f;
+    --track: #2b2d45;
+    --checklist-off: #5c5e78;
+    --divider: #2b2d45;
+    --footer: #55577a;
+    --tip-bg: #2a230f;
+    --tip-border: #f7b731;
+    --tip-text: #f0c766;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 50%, var(--bg3) 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    padding: 20px;
+    transition: background 0.4s ease;
+  }
+
+  .card {
+    background: var(--card-bg);
+    padding: 34px 38px;
+    border-radius: 18px;
+    width: 400px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+    animation: floatUp 0.5s ease;
+    transition: background 0.4s ease;
+    position: relative;
+  }
+
+  @keyframes floatUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20% { transform: translateX(-6px); }
+    40% { transform: translateX(6px); }
+    60% { transform: translateX(-4px); }
+    80% { transform: translateX(4px); }
+  }
+  .shake { animation: shake 0.35s ease; }
+
+  @keyframes pop {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.03); }
+    100% { transform: scale(1); }
+  }
+  .pop { animation: pop 0.3s ease; }
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  h1 {
+    font-size: 21px;
+    margin: 0 0 6px 0;
+    color: var(--text-main);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .theme-toggle {
+    cursor: pointer;
+    font-size: 18px;
+    background: var(--track);
+    border-radius: 50px;
+    padding: 6px 10px;
+    user-select: none;
+    transition: background 0.3s ease;
+  }
+
+  p.subtitle {
+    margin: 0 0 22px 0;
+    color: var(--text-sub);
+    font-size: 13px;
+  }
+
+  .input-wrap {
+    position: relative;
+    display: flex;
+    gap: 8px;
+  }
+  input {
+    flex: 1;
+    width: 100%;
+    padding: 12px 42px 12px 14px;
+    font-size: 15px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    outline: none;
+    background: transparent;
+    color: var(--text-main);
+    transition: border-color 0.2s ease;
+  }
+  input:focus { border-color: #6c4bd6; }
+
+  .toggle-eye {
+    position: absolute;
+    right: 58px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text-sub);
+    user-select: none;
+  }
+
+  .copy-btn {
+    width: 42px;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: transparent;
+    cursor: pointer;
+    font-size: 16px;
+    color: var(--text-sub);
+    transition: background 0.2s ease, transform 0.15s ease;
+  }
+  .copy-btn:hover { background: var(--track); }
+  .copy-btn.copied { transform: scale(1.1); }
+
+  .bar-track {
+    height: 9px;
+    background: var(--track);
+    border-radius: 5px;
+    margin-top: 16px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 5px;
+    transition: width 0.35s ease, background 0.35s ease;
+  }
+
+  .label-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-top: 10px;
+  }
+  .label {
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--text-main);
+  }
+  .crack-time {
+    font-size: 12px;
+    color: var(--text-sub);
+  }
+
+  ul {
+    margin: 18px 0 0 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    border-top: 1px solid var(--divider);
+    padding-top: 14px;
+  }
+  li {
+    padding: 4px 0;
+    color: var(--checklist-off);
+    transition: color 0.2s ease;
+  }
+  li.met { color: #2f9e44; }
+  li span.icon {
+    display: inline-block;
+    width: 20px;
+    font-weight: bold;
+  }
+
+  .warning {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: #fff0f0;
+    border-left: 4px solid #e03131;
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: #c92a2a;
+    display: none;
+  }
+  .warning.show { display: block; }
+
+  .tips {
+    margin-top: 12px;
+    padding: 10px 12px;
+    background: var(--tip-bg);
+    border-left: 4px solid var(--tip-border);
+    border-radius: 6px;
+    font-size: 12.5px;
+    color: var(--tip-text);
+    display: none;
+  }
+  .tips.show { display: block; }
+  .tips strong { display: block; margin-bottom: 4px; }
+  .tips ul { border-top: none; padding-top: 0; margin: 4px 0 0 0; }
+  .tips li { color: var(--tip-text); padding: 2px 0; }
+  .tips li::before { content: "→ "; }
+
+  .age-tracker {
+    margin-top: 14px;
+    padding: 10px 12px;
+    background: var(--track);
+    border-radius: 8px;
+    font-size: 12.5px;
+    color: var(--text-sub);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .age-btn {
+    border: none;
+    background: #6c4bd6;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11.5px;
+    cursor: pointer;
+  }
+  .age-btn:hover { background: #5b3ec2; }
+
+  .footer-note {
+    margin-top: 16px;
+    font-size: 11px;
+    color: var(--footer);
+    text-align: center;
+  }
+</style>
+</head>
+<body>
+
+<div class="card" id="card">
+  <div class="top-row">
+    <h1>🔐 Password Checker</h1>
+    <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</div>
+  </div>
+  <p class="subtitle">Type a password below to see how strong it is</p>
+
+  <div class="input-wrap">
+    <input type="password" id="pwd" placeholder="Enter password..." oninput="checkStrength()">
+    <span class="toggle-eye" id="eye" onclick="toggleVisibility()">👁</span>
+    <button class="copy-btn" id="copyBtn" onclick="copyPassword()" title="Copy password">📋</button>
+  </div>
+
+  <div class="bar-track">
+    <div class="bar-fill" id="bar"></div>
+  </div>
+
+  <div class="label-row">
+    <div class="label" id="label" style="color:#999;">Start typing...</div>
+    <div class="crack-time" id="crackTime"></div>
+  </div>
+
+  <div class="warning" id="warning">⚠️ This is a common password. Avoid using it.</div>
+
+  <div class="tips" id="tips">
+    <strong>How to improve it:</strong>
+    <ul id="tipsList"></ul>
+  </div>
+
+  <ul id="checklist">
+    <li id="c-length"><span class="icon">○</span> At least 12 characters</li>
+    <li id="c-upper"><span class="icon">○</span> One uppercase letter (A-Z)</li>
+    <li id="c-lower"><span class="icon">○</span> One lowercase letter (a-z)</li>
+    <li id="c-number"><span class="icon">○</span> One number (0-9)</li>
+    <li id="c-special"><span class="icon">○</span> One special character (!@#$...)</li>
+    <li id="c-nocommon"><span class="icon">○</span> Not a commonly used password</li>
+  </ul>
+
+  <div class="age-tracker">
+    <span id="ageText">No password saved yet</span>
+    <button class="age-btn" onclick="savePassword()">Mark as saved</button>
+  </div>
+
+  <div class="footer-note">Everything runs in your browser. Nothing is sent anywhere.</div>
+</div>
+
+<script>
+
+const COMMON_PASSWORDS = [
+  "password", "123456", "123456789", "qwerty", "abc123",
+  "password123", "111111", "12345678", "letmein", "iloveyou",
+  "admin", "welcome", "monkey", "dragon", "football"
+];
+
+// ---- Theme toggle ----
+function toggleTheme() {
+  const html = document.documentElement;
+  const toggle = document.getElementById("themeToggle");
+  const isDark = html.getAttribute("data-theme") === "dark";
+  if (isDark) {
+    html.removeAttribute("data-theme");
+    toggle.textContent = "🌙";
+  } else {
+    html.setAttribute("data-theme", "dark");
+    toggle.textContent = "☀️";
+  }
+}
+
+// ---- Show/hide password ----
+function toggleVisibility() {
+  const pwd = document.getElementById("pwd");
+  const eye = document.getElementById("eye");
+  if (pwd.type === "password") {
+    pwd.type = "text";
+    eye.textContent = "🙈";
+  } else {
+    pwd.type = "password";
+    eye.textContent = "👁";
+  }
+}
+
+// ---- Copy to clipboard ----
+function copyPassword() {
+  const pwd = document.getElementById("pwd").value;
+  const btn = document.getElementById("copyBtn");
+  if (!pwd) return;
+  navigator.clipboard.writeText(pwd).then(() => {
+    btn.textContent = "✅";
+    btn.classList.add("copied");
+    setTimeout(() => {
+      btn.textContent = "📋";
+      btn.classList.remove("copied");
+    }, 1200);
+  });
+}
+
+
+let savedAt = null;
+let ageInterval = null;
+
+function savePassword() {
+  savedAt = Date.now();
+  if (ageInterval) clearInterval(ageInterval);
+  ageInterval = setInterval(updateAgeText, 1000);
+  updateAgeText();
+}
+
+function updateAgeText() {
+  const el = document.getElementById("ageText");
+  if (!savedAt) {
+    el.textContent = "No password saved yet";
+    return;
+  }
+  const seconds = Math.floor((Date.now() - savedAt) / 1000);
+  let text;
+  if (seconds < 60) text = seconds + " sec ago";
+  else if (seconds < 3600) text = Math.floor(seconds / 60) + " min ago";
+  else if (seconds < 86400) text = Math.floor(seconds / 3600) + " hrs ago";
+  else text = Math.floor(seconds / 86400) + " days ago";
+
+  el.textContent = "Set " + text;
+
+  const days = seconds / 86400;
+  if (days >= 90) {
+    el.textContent += " ⚠️ time to update!";
+  }
+}
+
+
+function estimateCrackTime(pwd, rules) {
+  if (pwd.length === 0) return "";
+
+  let poolSize = 0;
+  if (rules.lower) poolSize += 26;
+  if (rules.upper) poolSize += 26;
+  if (rules.number) poolSize += 10;
+  if (rules.special) poolSize += 32;
+  if (poolSize === 0) poolSize = 1;
+
+  const combinations = Math.pow(poolSize, pwd.length);
+  const guessesPerSecond = 10_000_000_000; 
+  const seconds = combinations / guessesPerSecond;
+
+  if (seconds < 1) return "Instantly";
+  if (seconds < 60) return Math.round(seconds) + " sec";
+  if (seconds < 3600) return Math.round(seconds / 60) + " min";
+  if (seconds < 86400) return Math.round(seconds / 3600) + " hrs";
+  if (seconds < 31536000) return Math.round(seconds / 86400) + " days";
+
+  const years = seconds / 31536000;
+  if (years < 1000) return Math.round(years) + " yrs";
+  if (years < 1000000) return Math.round(years / 1000) + "k yrs";
+  return "centuries";
+}
+
+
+function buildTips(rules, isCommon) {
+  const tips = [];
+  if (isCommon) tips.push("Avoid common/reused passwords — pick something unique to you");
+  if (!rules.length) tips.push("Make it at least 12 characters long");
+  if (!rules.upper) tips.push("Add at least one uppercase letter (A-Z)");
+  if (!rules.lower) tips.push("Add at least one lowercase letter (a-z)");
+  if (!rules.number) tips.push("Add at least one number (0-9)");
+  if (!rules.special) tips.push("Add a special character like ! @ # $ %");
+  return tips;
+}
+
+function checkStrength() {
+  const pwd = document.getElementById("pwd").value;
+  const isCommon = COMMON_PASSWORDS.includes(pwd.toLowerCase());
+
+  const rules = {
+    length:   pwd.length >= 12,
+    upper:    /[A-Z]/.test(pwd),
+    lower:    /[a-z]/.test(pwd),
+    number:   /[0-9]/.test(pwd),
+    special:  /[^A-Za-z0-9]/.test(pwd),
+    nocommon: pwd.length > 0 && !isCommon
+  };
+
+  for (const rule in rules) {
+    const li = document.getElementById("c-" + rule);
+    const icon = li.querySelector(".icon");
+    if (rules[rule]) {
+      li.classList.add("met");
+      icon.textContent = "✓";
+    } else {
+      li.classList.remove("met");
+      icon.textContent = "○";
+    }
+  }
+
+  const warning = document.getElementById("warning");
+  warning.classList.toggle("show", isCommon && pwd.length > 0);
+
+  const score = Object.values(rules).filter(Boolean).length;
+
+  const bar = document.getElementById("bar");
+  const label = document.getElementById("label");
+  const crackTimeEl = document.getElementById("crackTime");
+  const card = document.getElementById("card");
+  const tipsBox = document.getElementById("tips");
+  const tipsList = document.getElementById("tipsList");
+
+  if (pwd.length === 0) {
+    bar.style.width = "0%";
+    label.textContent = "Start typing...";
+    label.style.color = "#999";
+    crackTimeEl.textContent = "";
+    tipsBox.classList.remove("show");
+    return;
+  }
+
+  let percent, color, text, weak;
+  if (isCommon) {
+    percent = 12; color = "#e03131"; text = "Weak (common)"; weak = true;
+  } else if (score <= 2) {
+    percent = 22; color = "#e03131"; text = "Weak"; weak = true;
+  } else if (score === 3) {
+    percent = 42; color = "#f08c00"; text = "Fair"; weak = true;
+  } else if (score === 4) {
+    percent = 62; color = "#f7b731"; text = "Good"; weak = false;
+  } else if (score === 5) {
+    percent = 85; color = "#2f9e44"; text = "Strong"; weak = false;
+  } else {
+    percent = 100; color = "#0c8599"; text = "Very Strong"; weak = false;
+  }
+
+  bar.style.width = percent + "%";
+  bar.style.background = color;
+  label.textContent = "Strength: " + text;
+  label.style.color = color;
+  crackTimeEl.textContent = "Crack time: " + estimateCrackTime(pwd, rules);
+
+  
+  card.classList.remove("shake", "pop");
+  void card.offsetWidth; 
+  if (weak) {
+    card.classList.add("shake");
+  } else if (score >= 5) {
+    card.classList.add("pop");
+  }
+
+  
+  const tips = buildTips(rules, isCommon);
+  if (tips.length > 0 && weak) {
+    tipsList.innerHTML = tips.map(t => "<li>" + t + "</li>").join("");
+    tipsBox.classList.add("show");
+  } else {
+    tipsBox.classList.remove("show");
+  }
+}
+</script>
+
+</body>
+</html>
