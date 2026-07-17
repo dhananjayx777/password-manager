@@ -1,5 +1,7 @@
 # 🔐 Password Strength Checker
 
+Live demo - https://cozy-marshmallow-b857a3.netlify.app/
+
 A modern Password Strength Checker built using HTML, CSS and JavaScript.
 
 ## Features
